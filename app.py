@@ -1,4 +1,4 @@
-﻿"""
+"""
 Vibe-to-Prompt Agent - Streamlit Frontend v4.0 "Mainframe" Edition
 ==================================================================
 
@@ -10,7 +10,7 @@ Execution model:
 2. Start run_pipeline(..., thread_id=thread_id) to let DeepSeek produce dynamic directions.
 3. Lock those directions in session_state for a HITL selection step.
 4. Resume with the selected direction, stream Claude chit-chat, then render the final XML prompt.
-5. Clear backend streaming/reasoning caches only after final delivery.
+5. ????? backend streaming/reasoning caches only after final delivery.
 """
 
 from __future__ import annotations
@@ -28,6 +28,7 @@ from html import escape
 from typing import Any, Dict, Iterator, List, Optional
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 import graph
 from vibe_config import VIBE_TECH_MAPPING
@@ -90,6 +91,7 @@ CSS = """
     --mf-border: rgba(255, 255, 255, 0.12);
     --mf-font-display: 'Helvetica Now Display', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --mf-font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-body: var(--mf-font-body);
     --mf-font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
 }
 
@@ -256,6 +258,7 @@ section.main > div, .block-container {
     border: 1px solid rgba(0, 0, 0, 0.10) !important;
     box-shadow: none !important;
     padding: 0.3em 1.25em !important;
+    min-height: 2.25rem !important;
 }
 
 .stButton > button:hover, .stFormSubmitButton > button:hover {
@@ -438,6 +441,398 @@ div[data-testid="stMetric"] label, div[data-testid="stMetric"] div {
     height: 14px;
 }
 
+.mf-direction-actions {
+    margin-top: 0.5rem;
+}
+
+/* -------------------------------------------------------------------------
+   CodeNest Dark Green Liquid Glass Skin
+   Visual override only: backend state machine remains untouched.
+------------------------------------------------------------------------- */
+:root {
+    --cn-bg: #070b0a;
+    --cn-panel: rgba(255, 255, 255, 0.01);
+    --cn-green: #5ed29c;
+    --cn-cyan: #61f3e8;
+    --cn-deep: #0f6f51;
+    --cn-ink: #e8fff5;
+    --cn-muted: rgba(223, 255, 241, 0.68);
+    --cn-line: rgba(255, 255, 255, 0.10);
+    --cn-glow: rgba(94, 210, 156, 0.18);
+    --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+html,
+body,
+[data-testid="stAppViewContainer"],
+.stApp {
+    background: #070b0a !important;
+    color: var(--cn-ink) !important;
+    font-family: var(--font-body) !important;
+}
+
+section.main > div,
+.block-container {
+    width: min(960px, calc(100vw - 2rem)) !important;
+    max-width: min(960px, calc(100vw - 2rem)) !important;
+    padding-top: 3.4rem !important;
+}
+
+.codenest-video {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    opacity: 0.6;
+    pointer-events: none;
+    filter: saturate(1.08) contrast(1.08) brightness(0.62);
+}
+
+.codenest-mask {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+        linear-gradient(90deg, #070b0a 0%, rgba(7, 11, 10, 0.82) 28%, rgba(7, 11, 10, 0.16) 100%),
+        linear-gradient(0deg, #070b0a 0%, rgba(7, 11, 10, 0.82) 18%, rgba(7, 11, 10, 0.16) 58%);
+}
+
+.codenest-grid {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+        linear-gradient(90deg, transparent 24.94%, rgba(255,255,255,0.10) 25%, transparent 25.06%),
+        linear-gradient(90deg, transparent 49.94%, rgba(255,255,255,0.10) 50%, transparent 50.06%),
+        linear-gradient(90deg, transparent 74.94%, rgba(255,255,255,0.10) 75%, transparent 75.06%);
+}
+
+.codenest-glow {
+    position: fixed;
+    top: -92px;
+    left: 50%;
+    z-index: 1;
+    width: min(780px, 88vw);
+    height: 230px;
+    transform: translateX(-50%);
+    pointer-events: none;
+    filter: blur(25px);
+    opacity: 0.88;
+}
+
+.codenest-hero {
+    position: relative;
+    z-index: 2;
+    margin: 0.2rem 0 1.55rem;
+}
+
+.cn-kicker,
+.codenest-kicker {
+    font-family: "Plus Jakarta Sans", var(--font-body) !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.16em !important;
+    text-transform: uppercase;
+    color: var(--cn-green) !important;
+}
+
+.codenest-title {
+    margin: 0.42rem 0 0;
+    max-width: 920px;
+    color: #f3fbff;
+    font-family: "Inter", var(--font-body);
+    font-size: clamp(42px, 8vw, 78px);
+    font-weight: 900;
+    line-height: 0.92;
+    letter-spacing: -0.055em;
+    text-transform: uppercase;
+}
+
+.codenest-title .green-dot {
+    color: var(--cn-green);
+    text-shadow: 0 0 28px rgba(94, 210, 156, 0.58);
+}
+
+.cn-floating-card {
+    width: 200px;
+    height: 200px;
+    transform: translateY(-50px);
+    margin-bottom: -38px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 0.42rem;
+}
+
+.cn-floating-card .status-orbit {
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
+    border: 1px solid rgba(94, 210, 156, 0.44);
+    box-shadow: 0 0 28px rgba(94, 210, 156, 0.18), inset 0 0 24px rgba(94, 210, 156, 0.08);
+}
+
+.cn-floating-card strong {
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #f5fbff;
+}
+
+.cn-floating-card span {
+    color: var(--cn-muted);
+    font-size: 0.78rem;
+    line-height: 1.42;
+}
+
+.mf-panel,
+.mf-panel-thin,
+.mf-direction-card {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.01) !important;
+    background-blend-mode: luminosity;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 0 !important;
+    border-radius: 18px;
+    color: var(--cn-ink);
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.1),
+        0 4px 20px rgba(94, 210, 156, 0.05),
+        0 28px 90px rgba(0, 0, 0, 0.34);
+}
+
+.mf-panel::before,
+.mf-panel-thin::before,
+.mf-direction-card::before,
+.cn-floating-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.4px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.08) 44%, rgba(94,210,156,0.36));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.mf-direction-card {
+    border-radius: 14px;
+}
+
+.mf-direction-card strong {
+    color: #f4fbff;
+}
+
+.mf-direction-card,
+.mf-direction-card ul,
+.mf-direction-card li,
+.stCaptionContainer,
+.stMarkdown p {
+    color: var(--cn-muted) !important;
+}
+
+.stTextArea label,
+.stRadio label,
+.stFormSubmitButton label {
+    color: var(--cn-muted) !important;
+    font-family: var(--font-body) !important;
+}
+
+.stTextArea textarea {
+    background: rgba(3, 8, 7, 0.58) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    color: #f4fbff !important;
+    border-radius: 14px !important;
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.06);
+}
+
+.stTextArea textarea:focus {
+    border-color: rgba(94, 210, 156, 0.72) !important;
+    box-shadow: 0 0 0 1px rgba(94, 210, 156, 0.20), 0 0 30px rgba(94, 210, 156, 0.08) !important;
+}
+
+.stButton > button,
+.stFormSubmitButton > button {
+    background: #ffffff !important;
+    color: #06100c !important;
+    border: 1px solid rgba(0, 0, 0, 0.10) !important;
+    border-radius: 999px !important;
+    font-size: 15px !important;
+    padding: 0.3em 1.25em !important;
+    transition: background 200ms ease, color 200ms ease, box-shadow 200ms ease, border-color 200ms ease !important;
+}
+
+.stButton > button:hover,
+.stFormSubmitButton > button:hover,
+div[data-testid="stButton"] button[kind="primary"]:hover,
+div[data-testid="stFormSubmitButton"] button[kind="primary"]:hover {
+    background: var(--cn-green) !important;
+    color: #06100c !important;
+    border-color: rgba(94, 210, 156, 0.76) !important;
+    box-shadow: 0 0 26px rgba(94, 210, 156, 0.20) !important;
+}
+
+div[data-testid="stButton"] button[kind="primary"],
+div[data-testid="stFormSubmitButton"] button[kind="primary"] {
+    background: #ffffff !important;
+    color: #06100c !important;
+}
+
+.stCodeBlock {
+    border-radius: 16px !important;
+    border: 1px solid rgba(255,255,255,0.10) !important;
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.08), 0 24px 70px rgba(0,0,0,0.34);
+}
+
+.stCodeBlock pre {
+    background: rgba(3, 8, 7, 0.88) !important;
+}
+
+.stCodeBlock code {
+    color: #d8ffed !important;
+}
+
+.mf-chip {
+    color: rgba(223, 255, 241, 0.78);
+    border-color: rgba(94, 210, 156, 0.16);
+    background: rgba(94, 210, 156, 0.045);
+}
+
+.mf-chip.ok {
+    color: #d8ffed;
+    border-color: rgba(94, 210, 156, 0.30);
+}
+
+div[data-testid="stMetric"] {
+    background: rgba(255,255,255,0.018) !important;
+    border-color: rgba(255,255,255,0.10) !important;
+}
+
+div[data-testid="stMetric"] label,
+div[data-testid="stMetric"] div {
+    color: #dfffee !important;
+}
+
+/* ---- CodeNest Readability Lock: every text layer must stay legible ---- */
+.stApp,
+.stApp *,
+[data-testid="stAppViewContainer"],
+[data-testid="stAppViewContainer"] * {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.42);
+}
+
+.stMarkdown,
+.stMarkdown *,
+.stCaptionContainer,
+.stCaptionContainer *,
+.stText,
+.stText *,
+.stStatusWidget,
+.stStatusWidget *,
+[data-testid="stNotificationContent"],
+[data-testid="stNotificationContent"] *,
+[data-testid="stAlert"],
+[data-testid="stAlert"] *,
+[data-testid="stExpander"],
+[data-testid="stExpander"] *,
+[data-testid="stMetric"],
+[data-testid="stMetric"] *,
+label,
+p,
+span,
+small,
+li,
+div[data-testid="stMarkdownContainer"],
+div[data-testid="stMarkdownContainer"] * {
+    color: #f0fff8 !important;
+}
+
+.stCaptionContainer,
+.stCaptionContainer *,
+.mf-direction-card,
+.mf-direction-card *,
+.mf-panel,
+.mf-panel *,
+.mf-panel-thin,
+.mf-panel-thin * {
+    color: #e1fff1 !important;
+}
+
+.cn-kicker,
+.codenest-kicker,
+.codenest-title .green-dot,
+.quality-title {
+    color: #5ed29c !important;
+    text-shadow: 0 0 24px rgba(94, 210, 156, 0.36);
+}
+
+.codenest-title,
+.codenest-title * {
+    color: #f7fffb !important;
+}
+
+.mf-typewriter {
+    color: #e8fff5 !important;
+    font-weight: 600;
+}
+
+.mf-cursor {
+    background: #5ed29c !important;
+}
+
+.stTextArea textarea,
+.stTextArea textarea::placeholder,
+.stTextInput input,
+.stSelectbox div,
+.stRadio label,
+.stRadio label *,
+.stCheckbox label,
+.stCheckbox label * {
+    color: #f2fff9 !important;
+}
+
+.stTextArea textarea::placeholder {
+    color: rgba(232, 255, 245, 0.56) !important;
+}
+
+.stButton > button,
+.stFormSubmitButton > button,
+.stButton > button *,
+.stFormSubmitButton > button * {
+    color: #06100c !important;
+    text-shadow: none !important;
+}
+
+.stButton > button:hover,
+.stFormSubmitButton > button:hover,
+.stButton > button:hover *,
+.stFormSubmitButton > button:hover * {
+    color: #06100c !important;
+}
+
+.stCodeBlock,
+.stCodeBlock *,
+.stCodeBlock pre,
+.stCodeBlock code {
+    color: #e8fff5 !important;
+    text-shadow: none !important;
+}
+
+.mf-chip,
+.mf-chip *,
+.vibe-chip,
+.quality-badge {
+    color: #e8fff5 !important;
+}
+
 @media (max-width: 640px) {
     .block-container {
         padding-top: 1rem !important;
@@ -454,48 +849,89 @@ div[data-testid="stMetric"] label, div[data-testid="stMetric"] div {
 """
 
 BACKDROP_HTML = """
-<video class="mf-bg" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260530_042513_df96a13b-6155-4f6e-8b93-c9dee66fba08.mp4" muted playsinline preload="auto" style="position:fixed;inset:0;z-index:0;object-fit:cover;width:100vw;height:100vh;pointer-events:none;opacity:0.9;"></video>
-<div style="position:fixed;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,0.70) 0%,rgba(0,0,0,0.42) 32%,rgba(0,0,0,0.15) 68%,rgba(0,0,0,0.55) 100%),linear-gradient(0deg,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.30) 22%,transparent 50%,rgba(0,0,0,0.20) 78%,rgba(0,0,0,0.88) 100%);"></div>
+<video class="codenest-video" muted autoplay loop playsinline preload="auto" data-hls-src="https://stream.mux.com/tLkHO1qZoaaQOUeVWo8hEBeGQfySP02EPS02BmnNFyXys.m3u8"></video>
+<div class="codenest-mask"></div>
+<div class="codenest-grid"></div>
+<svg class="codenest-glow" viewBox="0 0 780 230" aria-hidden="true">
+  <defs>
+    <radialGradient id="codenestCyberGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#61f3e8" stop-opacity="0.82"/>
+      <stop offset="42%" stop-color="#0f6f51" stop-opacity="0.48"/>
+      <stop offset="100%" stop-color="#070b0a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="390" cy="92" rx="330" ry="76" fill="url(#codenestCyberGlow)"/>
+</svg>
+"""
+
+INTERACTION_SCRIPT_HTML = """
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script>
 (function(){
-  /* ---- Mouse-scrub video ---- */
-  var video = document.querySelector('video.mf-bg');
-  if (video) {
-    video.autoplay = false;
-    var sensitivity = 0.8, lastX = 0, seeking = false;
-    video.addEventListener('loadedmetadata', function(){ video.currentTime = 0; });
-    document.addEventListener('mousemove', function(e){
-      if (seeking || !video) return;
-      var dx = e.clientX - lastX;
-      lastX = e.clientX;
-      if (Math.abs(dx) < 1) return;
-      var newTime = Math.max(0, Math.min(video.duration || 0, (video.currentTime || 0) + dx * sensitivity));
-      video.currentTime = newTime;
-      seeking = true;
-      video.addEventListener('seeked', function(){ seeking = false; }, {once: true});
-    });
+  const parentDoc = window.parent.document;
+  const parentWin = window.parent;
+
+  function installHlsVideo(){
+    const video = parentDoc.querySelector('video.codenest-video');
+    if (!video) {
+      parentWin.setTimeout(installHlsVideo, 120);
+      return;
+    }
+    if (video.dataset.codenestHlsInstalled === 'true') return;
+    video.dataset.codenestHlsInstalled = 'true';
+
+    const source = video.dataset.hlsSrc;
+    video.muted = true;
+    video.loop = true;
+    video.playsInline = true;
+
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = source;
+    } else if (window.Hls && window.Hls.isSupported()) {
+      const hls = new window.Hls({
+        enableWorker: false,
+        lowLatencyMode: false,
+        backBufferLength: 30
+      });
+      hls.loadSource(source);
+      hls.attachMedia(video);
+      video.dataset.codenestHlsWorker = 'false';
+    }
+    video.play().catch(function(){});
   }
 
-  /* ---- Typewriter ---- */
-  var twContainer = document.getElementById('mf-typewriter');
-  if (twContainer) {
-    var text = "Glad you stopped in. Good taste tends to find us. Now, what are we building?";
-    var idx = 0;
-    var cursor = document.createElement('span');
+  function installTypewriter(){
+    const target = parentDoc.getElementById('mf-typewriter');
+    if (!target) {
+      parentWin.setTimeout(installTypewriter, 120);
+      return;
+    }
+    if (target.dataset.mfTyped === 'true') return;
+    target.dataset.mfTyped = 'true';
+    target.textContent = '';
+
+    const text = "???????DeepSeek ????????Claude ?? XML Prompt ??????";
+    const cursor = parentDoc.createElement('span');
     cursor.className = 'mf-cursor';
-    twContainer.appendChild(cursor);
-    function typeChar(){
-      if (idx < text.length) {
-        twContainer.insertBefore(document.createTextNode(text.charAt(idx)), cursor);
-        idx++;
-        var delay = text.charAt(idx - 1) === '.' || text.charAt(idx - 1) === ',' || text.charAt(idx - 1) === '?' ? 180 : 32 + Math.random() * 24;
-        setTimeout(typeChar, delay);
+    target.appendChild(cursor);
+    let index = 0;
+
+    function tick(){
+      if (index < text.length) {
+        target.insertBefore(parentDoc.createTextNode(text.charAt(index)), cursor);
+        const current = text.charAt(index);
+        index += 1;
+        const delay = current === '.' || current === ',' || current === '?' ? 170 : 26 + Math.random() * 22;
+        parentWin.setTimeout(tick, delay);
       } else {
         cursor.classList.add('done');
       }
     }
-    setTimeout(typeChar, 520);
+    parentWin.setTimeout(tick, 360);
   }
+
+  installHlsVideo();
+  installTypewriter();
 })();
 </script>
 """
@@ -1094,15 +1530,16 @@ def _render_sidebar() -> None:
 def _render_header() -> None:
     st.markdown(
         f"""
-<div class="mf-navbar">
-  <span class="mf-logo">Mainframe<span class="star">✳︎</span></span>
-  <span style="font-size:10px;font-weight:400;letter-spacing:0.12em;text-transform:uppercase;color:var(--mf-muted);">Prompt engineering runtime</span>
-</div>
-<div class="mf-blur-intro">
-  <p class="mf-blur-line">Hey there, meet A.R.I.A,</p>
-  <p class="mf-blur-line">Mainframe&rsquo;s Adaptive Response Interface Agent</p>
-</div>
-<div id="mf-typewriter" class="mf-typewriter"></div>
+<section class="codenest-hero">
+  <div class="mf-panel cn-floating-card">
+    <div class="status-orbit"></div>
+    <strong>CodeNest Core</strong>
+    <span>DeepSeek directions locked. Claude XML contract ready for streamed assembly.</span>
+  </div>
+  <div class="codenest-kicker">CodeNest Dynamic Prompt Runtime</div>
+  <h1 class="codenest-title">VIBE AGENT CORE<span class="green-dot">.</span></h1>
+  <div id="mf-typewriter" class="mf-typewriter"></div>
+</section>
 """,
         unsafe_allow_html=True,
     )
@@ -1122,11 +1559,11 @@ def _render_error() -> None:
 def _render_input_area() -> None:
     disabled = st.session_state.current_stage in {"generating", "clarifying", "direction_select"}
     st.markdown(
-        '<div class="mf-panel"><div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--mf-muted);margin-bottom:0.4rem;">Request</div>',
+        '<div class="mf-panel"><div class="cn-kicker" style="margin-bottom:0.4rem;">Request Intake</div>',
         unsafe_allow_html=True,
     )
     user_input = st.text_area(
-        "Describe the vibe",
+        "Describe the system atmosphere",
         value=st.session_state.user_input,
         placeholder="Build me a monitoring dashboard with the oppressive rationality of MOSS from The Wandering Earth 2. Needs resilience, perf budgets, test contracts.",
         height=128,
@@ -1137,19 +1574,19 @@ def _render_input_area() -> None:
     col_gen, col_reset = st.columns([2, 1])
     with col_gen:
         generate_clicked = st.button(
-            "Submit",
+            "?? v4.0 ?????",
             type="primary",
             use_container_width=True,
             disabled=disabled,
         )
     with col_reset:
-        reset_clicked = st.button("Reset", use_container_width=True)
+        reset_clicked = st.button("?????", use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
     if reset_clicked:
         _safe_clear_streaming_state(st.session_state.thread_id)
         _reset_all()
-        st.toast("Cleared. Try a different vibe.")
+        st.toast("?????ed. Try a different vibe.")
         st.rerun()
 
     if not generate_clicked:
@@ -1274,27 +1711,31 @@ def _render_dynamic_direction_form() -> None:
             unsafe_allow_html=True,
         )
 
-    option_ids = [str(d.get("id") or f"direction_{idx + 1}") for idx, d in enumerate(directions)]
-    direction_by_id = {str(d.get("id") or f"direction_{idx + 1}"): d for idx, d in enumerate(directions)}
+    st.markdown('<div class="mf-direction-actions">', unsafe_allow_html=True)
+    button_columns = st.columns(max(1, min(3, len(directions))))
+    selected_id = ""
+    selected_direction: Dict[str, Any] = {}
 
-    with st.form(key="dynamic_direction_form", clear_on_submit=False):
-        selected_id = st.radio(
-            "Main attack vector",
-            options=option_ids,
-            format_func=lambda option: _format_direction_option(direction_by_id.get(option, {})),
-            key="dynamic_direction_radio_locked",
-        )
-        submitted = st.form_submit_button(
-            "Generate",
-            type="primary",
-            use_container_width=True,
-        )
+    for idx, direction in enumerate(directions):
+        direction_id = str(direction.get("id") or f"direction_{idx + 1}")
+        label = _format_direction_option(direction)
+        with button_columns[idx % len(button_columns)]:
+            if st.button(
+                label,
+                key=f"direction_pick_{direction_id}",
+                use_container_width=True,
+                type="primary" if idx == 0 else "secondary",
+            ):
+                selected_id = direction_id
+                selected_direction = direction
 
-    if not submitted:
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    if not selected_id:
         return
 
     st.session_state.direction_choice_id = selected_id
-    st.session_state.selected_dynamic_direction = direction_by_id.get(selected_id, {})
+    st.session_state.selected_dynamic_direction = selected_direction
     st.session_state.current_stage = "generating"
     try:
         result = _resume_direction_e2e(selected_id)
@@ -1334,6 +1775,81 @@ def _render_quality_panel(snapshot: Dict[str, Any]) -> None:
     )
     st.markdown(badge_html, unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
+
+
+def _render_clipboard_copy_button(text: str) -> None:
+    payload = json.dumps(text)
+    components.html(
+        f"""
+<button class="cn-copy-pill" id="mf-copy-prompt" type="button" aria-label="Copy Cursor prompt">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="9" y="9" width="11" height="11" rx="2"></rect>
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+  </svg>
+  <span>Copy</span>
+</button>
+<script>
+const button = document.getElementById('mf-copy-prompt');
+const text = {payload};
+button.addEventListener('click', async () => {{
+  const label = button.querySelector('span');
+  try {{
+    await navigator.clipboard.writeText(text);
+    label.textContent = 'Copied';
+  }} catch (error) {{
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.style.position = 'fixed';
+    area.style.left = '-9999px';
+    document.body.appendChild(area);
+    area.focus();
+    area.select();
+    document.execCommand('copy');
+    area.remove();
+    label.textContent = 'Copied';
+  }}
+  window.setTimeout(() => label.textContent = 'Copy', 1400);
+}});
+</script>
+<style>
+html, body {{
+  margin: 0;
+  background: transparent;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}}
+.cn-copy-pill {{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  min-height: 36px;
+  border-radius: 999px;
+  padding: 0.3em 1.25em;
+  font-size: 15px;
+  font-weight: 600;
+  background: rgba(3, 8, 7, 0.92);
+  color: #d8ffed;
+  border: 1px solid rgba(94, 210, 156, 0.42);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.10), 0 0 22px rgba(94,210,156,0.12);
+  cursor: pointer;
+  transition: all 200ms ease;
+}}
+.cn-copy-pill:hover {{
+  background: #5ed29c;
+  color: #06100c;
+  border-color: rgba(94, 210, 156, 0.78);
+  box-shadow: 0 0 26px rgba(94,210,156,0.24);
+}}
+.cn-copy-pill svg {{
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}}
+</style>
+""",
+        height=42,
+    )
 
 
 def _render_result() -> None:
@@ -1390,8 +1906,7 @@ def _render_result() -> None:
     col_copy, col_like, col_refresh, _ = st.columns([1.1, 1.2, 1.4, 3.3])
 
     with col_copy:
-        if st.button("📋 Copy", use_container_width=True):
-            st.toast("Use the code block copy button (top-right corner).")
+        _render_clipboard_copy_button(cursor_prompt)
 
     with col_like:
         if st.session_state.liked:
@@ -1423,6 +1938,7 @@ def main() -> None:
     _init_state()
     st.markdown(CSS, unsafe_allow_html=True)
     st.markdown(BACKDROP_HTML, unsafe_allow_html=True)
+    components.html(INTERACTION_SCRIPT_HTML, height=0, width=0)
     _render_sidebar()
     _render_header()
     _render_error()

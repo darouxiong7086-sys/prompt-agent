@@ -1,10 +1,9 @@
-"""
-Vibe-to-Prompt Agent - Streamlit Frontend v3.5 E2E Hook-up
-==========================================================
+﻿"""
+Vibe-to-Prompt Agent - Streamlit Frontend v4.0 "Mainframe" Edition
+==================================================================
 
-This frontend consumes the real backend streaming hooks:
-- get_streaming_chit_chat(thread_id)
-- clear_streaming_state(thread_id)
+Complete Swiss modernist visual refactor — all backend threading,
+streaming, HITL, and DeepSeek/Claude routing logic preserved intact.
 
 Execution model:
 1. Generate a frontend-owned thread_id.
@@ -35,8 +34,8 @@ from vibe_config import VIBE_TECH_MAPPING
 
 
 st.set_page_config(
-    page_title="Vibe-to-Prompt Agent v4.0",
-    page_icon="✨",
+    page_title="Mainframe — Vibe-to-Prompt Agent v4.0",
+    page_icon="✦",
     layout="centered",
 )
 
@@ -53,432 +52,453 @@ STREAM_TIMEOUT_SECONDS = 240
 STREAM_GRACE_SECONDS = 0.35
 
 OFFICE_QUOTES: List[str] = [
-    "今天又是用 Vibe 糊弄过去的一天，咖啡喝了吗？☕",
-    "需求可以模糊，但 Prompt 必须硬核。💪",
-    "先别焦虑，把感觉说出来，剩下的交给 3.5 流式工业链路。🧠",
-    "这不是偷懒，这是把抽象需求产品化。📦",
-    "把一句大白话变成一份可验收规格书，也算今日份降本增效。📈",
-    "不要怕描述不专业，专业这件事我来补。🛠️",
-    "先输入 Vibe，再假装一切都在掌控中。🚀",
-    "今天的工位哲学：能让 Agent 写清楚的，就别自己憋。🌿",
+    "Good design is as little design as possible.",
+    "Less, but better — because it concentrates on the essential.",
+    "A designer knows he has achieved perfection not when there is nothing left to add, but when there is nothing left to take away.",
+    "The mainframe is not a machine; it is an attitude.",
+    "Form follows function. And function this time is prompt engineering.",
+    "Not busy. Not minimal. Just right.",
+    "Systems, not surfaces. Contracts, not copy.",
+    "Swiss precision: every pixel, every token, every boundary condition.",
 ]
 
 COMPLEXITY_SIGNALS: List[str] = [
-    "像", "就像", "仿佛", "电影", "动漫", "游戏", "小说", "末日", "压抑", "窒息",
-    "梦境", "迷幻", "废土", "哥特", "黑客帝国", "代码雨", "全息", "霓虹",
-    "银翼杀手", "攻壳", "MOSS", "流浪地球", "质感", "通感",
+    "like", "as if", "resembles", "movie", "anime", "game", "novel",
+    "apocalyptic", "oppressive", "suffocating", "dream", "surreal",
+    "wasteland", "gothic", "dark fantasy", "cyber", "full-stack",
+    "holographic", "neon", "blade runner", "MOSS", "wandering earth",
+    "texture", "synesthesia",
 ]
 
 CSS = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+
+@font-face {
+    font-family: 'Helvetica Now Display';
+    src: local('Helvetica Neue'), local('Helvetica'), local('Arial');
+    font-display: swap;
+}
 
 :root {
-    --cn-bg: #070b0a;
-    --cn-green: #5ed29c;
-    --cn-cyan: #61f3e8;
-    --cn-ink: #e8fff5;
-    --cn-muted: rgba(223, 255, 241, 0.68);
-    --cn-line: rgba(255, 255, 255, 0.10);
-    --cn-glass: rgba(255, 255, 255, 0.01);
+    --mf-bg: #000000;
+    --mf-text: #ffffff;
+    --mf-muted: rgba(255, 255, 255, 0.55);
+    --mf-line: rgba(255, 255, 255, 0.08);
+    --mf-glass: rgba(255, 255, 255, 0.02);
+    --mf-glass-hover: rgba(255, 255, 255, 0.06);
+    --mf-border: rgba(255, 255, 255, 0.12);
+    --mf-font-display: 'Helvetica Now Display', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mf-font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mf-font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
 }
 
 html, body, [data-testid="stAppViewContainer"], .stApp {
-    background: var(--cn-bg) !important;
-    color: var(--cn-ink) !important;
-    font-family: "Inter", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-}
-
-.stApp::before,
-.stApp::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-}
-
-.stApp::before {
-    background:
-        linear-gradient(90deg, rgba(7, 11, 10, 0.98) 0%, rgba(7, 11, 10, 0.64) 34%, rgba(7, 11, 10, 0.18) 100%),
-        linear-gradient(0deg, rgba(7, 11, 10, 1) 0%, rgba(7, 11, 10, 0.72) 18%, rgba(7, 11, 10, 0.10) 58%),
-        radial-gradient(ellipse at 50% -8%, rgba(97, 243, 232, 0.22), rgba(8, 77, 59, 0.18) 28%, transparent 62%);
-}
-
-.stApp::after {
-    background:
-        linear-gradient(90deg, transparent 24.92%, var(--cn-line) 25%, transparent 25.08%),
-        linear-gradient(90deg, transparent 49.92%, var(--cn-line) 50%, transparent 50.08%),
-        linear-gradient(90deg, transparent 74.92%, var(--cn-line) 75%, transparent 75.08%);
-    opacity: 0.86;
-}
-
-.codenest-video {
-    position: fixed;
-    inset: 0;
-    z-index: -2;
-    width: 100vw;
-    height: 100vh;
-    object-fit: cover;
-    opacity: 0.60;
-    filter: saturate(0.9) contrast(1.04) brightness(0.56);
-    pointer-events: none;
-}
-
-.codenest-aurora {
-    position: fixed;
-    top: -92px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(760px, 88vw);
-    height: 220px;
-    z-index: -1;
-    pointer-events: none;
-    filter: blur(25px);
-    opacity: 0.82;
+    background: var(--mf-bg) !important;
+    color: var(--mf-text) !important;
+    font-family: var(--mf-font-body) !important;
 }
 
 [data-testid="stHeader"] {
     background: transparent !important;
+    display: none !important;
 }
 
-[data-testid="stSidebar"] {
-    background: rgba(5, 9, 8, 0.72) !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(10px);
+[data-testid="stToolbar"] {
+    display: none !important;
 }
 
-section.main > div,
-.block-container {
-    width: min(980px, calc(100vw - 2rem)) !important;
-    max-width: min(980px, calc(100vw - 2rem)) !important;
-    padding-top: 3.2rem !important;
+#MainMenu, footer {
+    display: none !important;
+}
+
+section.main > div, .block-container {
+    width: min(820px, calc(100vw - 3rem)) !important;
+    max-width: min(820px, calc(100vw - 3rem)) !important;
+    padding-top: 1.6rem !important;
     padding-bottom: 4rem !important;
     position: relative;
-    z-index: 1;
+    z-index: 2;
 }
 
-.codenest-hero {
-    margin: 0.4rem 0 1.55rem;
+/* ---- Mainframe Navbar ---- */
+.mf-navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0 0.8rem;
+    border-bottom: 1px solid var(--mf-line);
+    margin-bottom: 1.6rem;
 }
 
-.stage-kicker,
-.direction-panel strong,
-.quality-title,
-.tiny-note strong {
-    font-family: "Plus Jakarta Sans", "Inter", sans-serif !important;
-    font-size: 11px !important;
-    letter-spacing: 0.16em !important;
-    text-transform: uppercase;
-    font-weight: 800 !important;
-    color: var(--cn-green) !important;
+.mf-logo {
+    font-family: var(--mf-font-display);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: #000;
+    background: #fff;
+    display: inline-block;
+    padding: 0.04em 0.35em 0.04em 0.5em;
+    line-height: 1.2;
 }
 
-.codenest-title {
+.mf-logo .star {
+    font-size: 22px;
+    vertical-align: middle;
+    margin-left: 0.06em;
+}
+
+/* ---- Hero Blur Intro ---- */
+.mf-blur-intro {
+    margin: 1.2rem 0 1.8rem;
+}
+
+.mf-blur-line {
+    font-family: var(--mf-font-display);
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--mf-text);
+    filter: blur(4px);
+    line-height: 1.2;
     margin: 0;
-    max-width: 940px;
-    font-family: "Inter", "Plus Jakarta Sans", sans-serif;
-    font-size: clamp(40px, 8vw, 72px);
-    line-height: 0.91;
-    letter-spacing: -0.065em;
-    font-weight: 900;
-    color: #f4fff9;
-    text-transform: uppercase;
-    text-shadow: 0 0 34px rgba(94, 210, 156, 0.12);
 }
 
-.codenest-title .green-dot {
-    color: var(--cn-green);
-    text-shadow: 0 0 30px rgba(94, 210, 156, 0.55);
+/* ---- Typewriter ---- */
+.mf-typewriter {
+    font-family: var(--mf-font-body);
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--mf-muted);
+    min-height: 1.6em;
+    margin: 0.2rem 0 1.4rem;
+    letter-spacing: 0.01em;
 }
 
-.caption {
-    max-width: 760px;
-    color: var(--cn-muted);
-    font-size: 1rem;
-    line-height: 1.76;
-    margin-top: 0.9rem;
-    margin-bottom: 1.25rem;
+.mf-cursor {
+    display: inline-block;
+    width: 1px;
+    height: 1.1em;
+    background: #000;
+    vertical-align: text-bottom;
+    margin-left: 2px;
+    animation: blink 1s step-end infinite;
 }
 
-.liquid-glass-card,
-.soft-panel,
-.stream-shell,
-.chit-chat-panel,
-.quality-panel,
-.clarify-panel,
-.direction-panel,
-.direction-card {
+.mf-cursor.done {
+    animation: none;
+    opacity: 0;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* ---- Cards & Panels ---- */
+.mf-panel {
     position: relative;
-    overflow: hidden;
-    background: rgba(255, 255, 255, 0.01) !important;
-    background-blend-mode: luminosity;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    border: 0 !important;
-    border-radius: 18px;
-    box-shadow:
-        inset 0 1px 1px rgba(255, 255, 255, 0.1),
-        0 24px 80px rgba(0, 0, 0, 0.32);
-}
-
-.liquid-glass-card::before,
-.soft-panel::before,
-.stream-shell::before,
-.chit-chat-panel::before,
-.quality-panel::before,
-.clarify-panel::before,
-.direction-panel::before,
-.direction-card::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1.4px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0.06) 42%, rgba(94,210,156,0.36));
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-}
-
-.liquid-glass-card::after,
-.stream-shell::after,
-.quality-panel::after,
-.direction-panel::after {
-    content: "";
-    position: absolute;
-    inset: -1px;
-    background: linear-gradient(110deg, transparent 0%, rgba(97, 243, 232, 0.10) 35%, transparent 62%);
-    transform: translateX(-40%);
-    animation: codenestSheen 7s ease-in-out infinite;
-    pointer-events: none;
-}
-
-@keyframes codenestSheen {
-    0%, 100% { transform: translateX(-56%); opacity: 0; }
-    42% { opacity: 1; }
-    62% { transform: translateX(58%); opacity: 0; }
-}
-
-@keyframes radarFadeIn {
-    from { opacity: 0; transform: translateY(8px); filter: blur(2px); }
-    to { opacity: 1; transform: translateY(0); filter: blur(0); }
-}
-
-.input-shell,
-.result-shell {
+    background: var(--mf-glass) !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid var(--mf-border) !important;
+    border-radius: 12px;
     padding: 1.1rem 1.15rem 1.25rem;
     margin: 1rem 0 1.15rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
 
-.soft-panel,
-.stream-shell,
-.chit-chat-panel,
-.quality-panel,
-.clarify-panel,
-.direction-panel {
-    padding: 1rem 1.05rem;
-    color: #dfffee;
-    margin: 1rem 0;
+.mf-panel-thin {
+    padding: 0.85rem 1rem;
+    margin: 0.85rem 0;
 }
 
-.direction-card {
-    padding: 0.95rem 1rem;
-    margin: 0.72rem 0;
-    color: rgba(232, 255, 245, 0.82);
-}
-
-.direction-card strong {
-    display: inline-block;
-    margin-bottom: 0.32rem;
-    font-family: "Plus Jakarta Sans", "Inter", sans-serif;
-    color: #f5fff9 !important;
-    font-size: 0.96rem !important;
-    letter-spacing: 0 !important;
-    text-transform: none;
-}
-
-.direction-card ul {
-    margin-top: 0.54rem;
-    margin-bottom: 0.08rem;
-    color: rgba(210, 255, 234, 0.70);
-}
-
-.chit-chat-panel h3,
-.stream-shell h3 {
-    margin: 0 0 0.65rem !important;
-    color: #f4fff9 !important;
-    font-family: "Plus Jakarta Sans", "Inter", sans-serif !important;
-    font-size: 0.92rem !important;
+/* ---- Text Input ---- */
+.stTextArea label, .stRadio label, .stFormSubmitButton label {
+    color: var(--mf-muted) !important;
+    font-family: var(--mf-font-body) !important;
+    font-size: 11px !important;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-}
-
-.chit-chat-panel p,
-.moment-line,
-.tiny-note {
-    color: rgba(224, 255, 240, 0.72);
-    font-size: 0.95rem;
-    line-height: 1.72;
-}
-
-.quality-panel {
-    animation: radarFadeIn 420ms ease-out both;
-}
-
-.quality-badge,
-.vibe-chip {
-    display: inline-block;
-    border-radius: 999px;
-    padding: 0.26rem 0.68rem;
-    margin: 0 0.36rem 0.36rem 0;
-    font-family: "Plus Jakarta Sans", "Inter", sans-serif;
-    font-size: 0.76rem;
-    font-weight: 800;
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    background: rgba(255, 255, 255, 0.035);
-    color: rgba(232, 255, 245, 0.82);
-}
-
-.quality-badge.ok,
-.vibe-chip {
-    color: #c8ffe2;
-    border-color: rgba(94, 210, 156, 0.35);
-    box-shadow: inset 0 1px 1px rgba(255,255,255,0.08), 0 0 22px rgba(94, 210, 156, 0.08);
-}
-
-.quality-badge.warn {
-    color: #ffe7aa;
-    border-color: rgba(245, 158, 11, 0.35);
-}
-
-.stTextArea label,
-.stRadio label,
-.stFormSubmitButton label {
-    color: rgba(232, 255, 245, 0.82) !important;
-    font-family: "Plus Jakarta Sans", "Inter", sans-serif !important;
-    font-size: 11px !important;
-    letter-spacing: 0.11em;
-    text-transform: uppercase;
+    font-weight: 600 !important;
 }
 
 .stTextArea textarea {
-    background: rgba(255, 255, 255, 0.018) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    color: #f4fff9 !important;
-    border-radius: 14px !important;
-    font-size: 1rem !important;
+    background: rgba(0, 0, 0, 0.25) !important;
+    border: 1px solid var(--mf-border) !important;
+    color: var(--mf-text) !important;
+    border-radius: 8px !important;
+    font-size: 0.92rem !important;
     line-height: 1.62 !important;
-    box-shadow: inset 0 1px 1px rgba(255,255,255,0.08), 0 18px 48px rgba(0,0,0,0.20);
-}
-
-.stTextArea div:has(> textarea),
-.stTextArea div:has(textarea) {
-    background: rgba(255, 255, 255, 0.018) !important;
-    border-color: rgba(255, 255, 255, 0.12) !important;
+    font-family: var(--mf-font-body) !important;
 }
 
 .stTextArea textarea:focus {
-    border-color: rgba(94, 210, 156, 0.72) !important;
-    box-shadow: 0 0 0 1px rgba(94, 210, 156, 0.22), 0 0 28px rgba(94, 210, 156, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
 }
 
 .stTextArea textarea::placeholder {
-    color: rgba(232, 255, 245, 0.35) !important;
+    color: rgba(255, 255, 255, 0.20) !important;
 }
 
-.stButton > button,
-.stFormSubmitButton > button {
+/* ---- Pill Buttons ---- */
+.stButton > button, .stFormSubmitButton > button {
     border-radius: 999px !important;
-    font-family: "Plus Jakarta Sans", "Inter", sans-serif !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.02em;
-    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease !important;
-    background: rgba(255, 255, 255, 0.025) !important;
-    color: #effff7 !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    box-shadow: inset 0 1px 1px rgba(255,255,255,0.09);
+    font-family: var(--mf-font-body) !important;
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    letter-spacing: 0.01em;
+    transition: all 0.2s ease !important;
+    background: #fff !important;
+    color: #000 !important;
+    border: 1px solid rgba(0, 0, 0, 0.10) !important;
+    box-shadow: none !important;
+    padding: 0.3em 1.25em !important;
 }
 
-.stButton > button:hover,
-.stFormSubmitButton > button:hover {
-    transform: translateY(-1px);
-    border-color: rgba(94, 210, 156, 0.55) !important;
-    box-shadow: 0 0 34px rgba(94, 210, 156, 0.15), inset 0 1px 1px rgba(255,255,255,0.12);
+.stButton > button:hover, .stFormSubmitButton > button:hover {
+    background: #000 !important;
+    color: #fff !important;
+    border-color: rgba(255, 255, 255, 0.20) !important;
+    transform: none !important;
+    box-shadow: none !important;
 }
 
 div[data-testid="stButton"] button[kind="primary"],
 div[data-testid="stFormSubmitButton"] button[kind="primary"] {
-    background: linear-gradient(135deg, rgba(94, 210, 156, 0.95), rgba(97, 243, 232, 0.62)) !important;
-    border-color: rgba(202, 255, 230, 0.56) !important;
-    color: #06100c !important;
+    background: #fff !important;
+    color: #000 !important;
+    border-color: rgba(0, 0, 0, 0.15) !important;
 }
 
+div[data-testid="stButton"] button[kind="primary"]:hover,
+div[data-testid="stFormSubmitButton"] button[kind="primary"]:hover {
+    background: #000 !important;
+    color: #fff !important;
+    border-color: rgba(255, 255, 255, 0.20) !important;
+}
+
+/* ---- Radio (Pill-style) ---- */
 div[data-testid="stRadio"] > div {
     position: relative;
-    background: rgba(255, 255, 255, 0.018) !important;
-    border-radius: 16px;
-    padding: 0.85rem 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    box-shadow: inset 0 1px 1px rgba(255,255,255,0.08);
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
 }
 
-div[data-testid="stRadio"] p,
-div[data-testid="stRadio"] span {
-    color: rgba(232, 255, 245, 0.86) !important;
+div[data-testid="stRadio"] div[role="radiogroup"] {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
+div[data-testid="stRadio"] label {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 0.3em 1.25em !important;
+    border-radius: 999px !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    background: #fff !important;
+    color: #000 !important;
+    border: 1px solid rgba(0, 0, 0, 0.10) !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    min-height: unset !important;
+}
+
+div[data-testid="stRadio"] label:hover {
+    background: #000 !important;
+    color: #fff !important;
+    border-color: rgba(255, 255, 255, 0.20) !important;
+}
+
+div[data-testid="stRadio"] label[data-checked="true"],
+div[data-testid="stRadio"] input:checked + div,
+div[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] + div[data-checked="true"] {
+    background: #000 !important;
+    color: #fff !important;
+    border-color: rgba(255, 255, 255, 0.20) !important;
+}
+
+div[data-testid="stRadio"] input {
+    display: none !important;
+}
+
+/* ---- Code Blocks ---- */
 .stCodeBlock {
-    border-radius: 16px !important;
-    border: 1px solid rgba(255, 255, 255, 0.10) !important;
-    box-shadow: inset 0 1px 1px rgba(255,255,255,0.08), 0 24px 70px rgba(0,0,0,0.30);
+    border-radius: 8px !important;
+    border: 1px solid var(--mf-border) !important;
     overflow: hidden;
+    background: rgba(0, 0, 0, 0.4) !important;
 }
 
 .stCodeBlock pre {
-    background: rgba(3, 8, 7, 0.86) !important;
+    background: rgba(0, 0, 0, 0.5) !important;
 }
 
 .stCodeBlock code {
-    color: #d8ffed !important;
+    color: var(--mf-text) !important;
+    font-family: var(--mf-font-mono) !important;
+    font-size: 13px !important;
 }
 
+/* ---- Dividers ---- */
 hr {
-    border-color: rgba(255, 255, 255, 0.10) !important;
+    border-color: var(--mf-line) !important;
+    margin: 1.4rem 0 !important;
 }
 
-@media (max-width: 760px) {
-    .stApp::after {
-        display: none;
-    }
+/* ---- Metric / Quality ---- */
+div[data-testid="stMetric"] {
+    background: var(--mf-glass) !important;
+    border: 1px solid var(--mf-line) !important;
+    border-radius: 8px;
+    padding: 0.4rem 0.6rem;
+}
+
+div[data-testid="stMetric"] label, div[data-testid="stMetric"] div {
+    color: var(--mf-muted) !important;
+}
+
+/* ---- Direction Detail Cards ---- */
+.mf-direction-card {
+    padding: 0.75rem 0.9rem;
+    margin: 0.5rem 0;
+    border: 1px solid var(--mf-line);
+    border-radius: 8px;
+    background: var(--mf-glass);
+}
+
+.mf-direction-card strong {
+    display: block;
+    font-size: 0.96rem;
+    font-weight: 600;
+    color: var(--mf-text);
+    margin-bottom: 0.2rem;
+}
+
+.mf-direction-card ul {
+    margin: 0.3rem 0 0;
+    padding-left: 1rem;
+    color: var(--mf-muted);
+    font-size: 0.82rem;
+    list-style: none;
+}
+
+.mf-direction-card ul li::before {
+    content: "— ";
+}
+
+/* ---- Chips & Badges ---- */
+.mf-chip {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem;
+    margin: 0 0.3rem 0.3rem 0;
+    font-size: 0.72rem;
+    font-weight: 500;
+    border: 1px solid var(--mf-line);
+    background: var(--mf-glass);
+    color: var(--mf-muted);
+}
+
+.mf-chip.ok {
+    color: var(--mf-text);
+    border-color: rgba(255, 255, 255, 0.20);
+}
+
+/* ---- Copy Pill ---- */
+.mf-copy-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 999px;
+    padding: 0.4em 1em;
+    font-size: 14px;
+    font-weight: 500;
+    background: #000;
+    color: #fff;
+    border: 1px solid var(--mf-border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mf-copy-pill:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.mf-copy-pill svg {
+    width: 14px;
+    height: 14px;
+}
+
+@media (max-width: 640px) {
     .block-container {
-        padding-top: 2rem !important;
+        padding-top: 1rem !important;
+        width: calc(100vw - 2rem) !important;
     }
-    .input-shell,
-    .result-shell {
-        padding: 0.9rem;
+    .mf-logo {
+        font-size: 20px;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] {
+        flex-direction: column;
     }
 }
 </style>
 """
 
 BACKDROP_HTML = """
-<video class="codenest-video" src="https://stream.mux.com/tLkHO1qZoaaQOUeVWo8hEBeGQfySP02EPS02BmnNFyXys.m3u8" autoplay muted loop playsinline preload="auto">
-    <source src="https://stream.mux.com/tLkHO1qZoaaQOUeVWo8hEBeGQfySP02EPS02BmnNFyXys.m3u8" type="application/x-mpegURL">
-</video>
-<svg class="codenest-aurora" viewBox="0 0 760 220" aria-hidden="true">
-    <defs>
-        <radialGradient id="cnGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#61f3e8" stop-opacity="0.85"/>
-            <stop offset="46%" stop-color="#0f6f51" stop-opacity="0.48"/>
-            <stop offset="100%" stop-color="#070b0a" stop-opacity="0"/>
-        </radialGradient>
-    </defs>
-    <ellipse cx="380" cy="92" rx="320" ry="78" fill="url(#cnGlow)"/>
-</svg>
-"""
+<video class="mf-bg" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260530_042513_df96a13b-6155-4f6e-8b93-c9dee66fba08.mp4" muted playsinline preload="auto" style="position:fixed;inset:0;z-index:0;object-fit:cover;width:100vw;height:100vh;pointer-events:none;opacity:0.9;"></video>
+<div style="position:fixed;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,0.70) 0%,rgba(0,0,0,0.42) 32%,rgba(0,0,0,0.15) 68%,rgba(0,0,0,0.55) 100%),linear-gradient(0deg,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.30) 22%,transparent 50%,rgba(0,0,0,0.20) 78%,rgba(0,0,0,0.88) 100%);"></div>
+<script>
+(function(){
+  /* ---- Mouse-scrub video ---- */
+  var video = document.querySelector('video.mf-bg');
+  if (video) {
+    video.autoplay = false;
+    var sensitivity = 0.8, lastX = 0, seeking = false;
+    video.addEventListener('loadedmetadata', function(){ video.currentTime = 0; });
+    document.addEventListener('mousemove', function(e){
+      if (seeking || !video) return;
+      var dx = e.clientX - lastX;
+      lastX = e.clientX;
+      if (Math.abs(dx) < 1) return;
+      var newTime = Math.max(0, Math.min(video.duration || 0, (video.currentTime || 0) + dx * sensitivity));
+      video.currentTime = newTime;
+      seeking = true;
+      video.addEventListener('seeked', function(){ seeking = false; }, {once: true});
+    });
+  }
 
+  /* ---- Typewriter ---- */
+  var twContainer = document.getElementById('mf-typewriter');
+  if (twContainer) {
+    var text = "Glad you stopped in. Good taste tends to find us. Now, what are we building?";
+    var idx = 0;
+    var cursor = document.createElement('span');
+    cursor.className = 'mf-cursor';
+    twContainer.appendChild(cursor);
+    function typeChar(){
+      if (idx < text.length) {
+        twContainer.insertBefore(document.createTextNode(text.charAt(idx)), cursor);
+        idx++;
+        var delay = text.charAt(idx - 1) === '.' || text.charAt(idx - 1) === ',' || text.charAt(idx - 1) === '?' ? 180 : 32 + Math.random() * 24;
+        setTimeout(typeChar, delay);
+      } else {
+        cursor.classList.add('done');
+      }
+    }
+    setTimeout(typeChar, 520);
+  }
+})();
+</script>
+"""
 
 # ============================================================================
 # Session State
@@ -617,13 +637,12 @@ def _call_resume_after_clarify(selected_option: str, thread_id: str, user_input:
 def _call_resume_after_direction(direction_choice_id: str, thread_id: str, user_input: str) -> Dict[str, Any]:
     resume_fn = getattr(graph, "resume_after_direction", None)
     if not callable(resume_fn):
-        raise RuntimeError("后端缺少 resume_after_direction，无法进入 v4.0 动态方向终审。")
+        raise RuntimeError("Backend missing resume_after_direction – cannot proceed to v4.0 dynamic direction finalization.")
     return resume_fn(
         thread_id=thread_id,
         direction_choice_id=direction_choice_id,
         user_input=user_input,
     )
-
 
 def _start_pipeline_worker(user_input: str, thread_id: str) -> tuple[threading.Event, Dict[str, Any]]:
     done_event = threading.Event()
@@ -710,7 +729,7 @@ def _poll_chit_tokens(
     while True:
         now = time.monotonic()
         if now - start_time > STREAM_TIMEOUT_SECONDS:
-            holder["error"] = TimeoutError("流式轮询超时，后台链路可能卡住。")
+            holder["error"] = TimeoutError("Stream poll timeout – backend chain may be stuck.")
             done_event.set()
             break
 
@@ -718,12 +737,13 @@ def _poll_chit_tokens(
         if full_text and len(full_text) < emitted_len:
             emitted_len = 0
             yield "\n\n"
+
         if len(full_text) > emitted_len:
             delta = full_text[emitted_len:]
             emitted_len = len(full_text)
             last_growth = now
             saw_token = True
-            status.update(label="碎碎念 Token 正在从后端流式抵达... 💬", state="running", expanded=False)
+            status.update(label="Token stream arriving from backend...", state="running", expanded=False)
             yield delta
             continue
 
@@ -731,7 +751,6 @@ def _poll_chit_tokens(
             break
 
         if done_event.is_set():
-            # One final poll after completion to consume late cache writes.
             final_text = _safe_get_streaming_chit_chat(thread_id)
             if len(final_text) > emitted_len:
                 delta = final_text[emitted_len:]
@@ -743,9 +762,9 @@ def _poll_chit_tokens(
 
         if now - last_status_tick > 1.1:
             if saw_token:
-                status.update(label="Claude 正在组装工业 Prompt，质量闸准备接棒... 🤖", state="running", expanded=False)
+                status.update(label="Claude is assembling the industrial prompt...", state="running", expanded=False)
             else:
-                status.update(label="正在等待后端首个碎碎念 Token... 💬", state="running", expanded=False)
+                status.update(label="Waiting for first token from backend...", state="running", expanded=False)
             last_status_tick = now
 
         time.sleep(POLL_INTERVAL_SECONDS)
@@ -757,7 +776,7 @@ def _stream_backend_chit(
     holder: Dict[str, Any],
     status: Any,
 ) -> str:
-    st.markdown('<div class="stream-shell"><h3>💬 开发者碎碎念</h3>', unsafe_allow_html=True)
+    st.markdown('<div class="mf-panel mf-panel-thin"><div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--mf-muted);margin-bottom:0.4rem;">Developer Chit-chat</div>', unsafe_allow_html=True)
     streamed = st.write_stream(_poll_chit_tokens(thread_id, done_event, holder, status))
     st.markdown("</div>", unsafe_allow_html=True)
     return str(streamed or "")
@@ -841,19 +860,19 @@ def _local_quality_scan(prompt: str) -> Dict[str, Any]:
 
     perf = bool(
         re.search(r"\b(TTI|LCP|CLS|FID|INP|P95|P99|fps|QPS|ms|s)\b", industrial, re.I)
-        and re.search(r"(<|<=|>=|>|≤|≥|\d+\s*(ms|s|fps|qps|%))", industrial, re.I)
+        and re.search(r"(<|<=|>=|>|≤|≥|==)\d+\s*(ms|s|fps|qps|%)", industrial, re.I)
     )
     edge = _contains_any(
         industrial,
-        ["空数据", "网络", "超时", "重试", "并发", "冲突", "慢查询", "异常", "降级", "幂等"],
+        ["empty", "network", "timeout", "retry", "concurrent", "conflict", "slow query", "exception", "degradation", "idempotent"],
     )
     observability = _contains_any(
         industrial,
-        ["trace_id", "trace id", "结构化日志", "日志", "埋点", "metrics", "Prometheus", "告警", "链路追踪"],
+        ["trace_id", "trace id", "structured log", "log", "instrument", "metrics", "prometheus", "alert", "link tracing"],
     )
     tests = _contains_any(
         industrial,
-        ["测试断言", "单元测试", "集成测试", "E2E", "端到端", "断言", "验收", "pytest", "Playwright"],
+        ["test assertion", "unit test", "integration test", "e2e", "end to end", "assertion", "validation", "pytest", "playwright"],
     )
 
     score = 50 + sum([perf, edge, observability, tests]) * 12
@@ -914,16 +933,16 @@ def _run_pipeline_e2e(user_input: str) -> Dict[str, Any]:
 
     done_event, holder = _start_pipeline_worker(user_input, thread_id)
 
-    with st.status("v4.0 第一阶段启动：DeepSeek 正在生成动态方向...", expanded=False) as status:
-        status.update(label="DeepSeek v4-pro 正在提炼 2-3 个主攻方向... 🧠", state="running", expanded=False)
+    with st.status("v4.0 stage 1: DeepSeek generating dynamic directions...", expanded=False) as status:
+        status.update(label="DeepSeek v4-pro distilling 2–3 attack vectors...", state="running", expanded=False)
 
         start_time = time.monotonic()
         while not done_event.is_set():
             if time.monotonic() - start_time > STREAM_TIMEOUT_SECONDS:
-                holder["error"] = TimeoutError("动态方向生成超时，DeepSeek 链路可能卡住。")
+                holder["error"] = TimeoutError("Dynamic direction generation timeout – DeepSeek chain may be stuck.")
                 done_event.set()
                 break
-            status.update(label="DeepSeek 正在把需求压成可选择的技术路线...", state="running", expanded=False)
+            status.update(label="DeepSeek folding your request into selectable tech routes...", state="running", expanded=False)
             time.sleep(0.12)
         st.session_state.last_streamed_chit = ""
 
@@ -932,22 +951,22 @@ def _run_pipeline_e2e(user_input: str) -> Dict[str, Any]:
 
         result = holder.get("result")
         if not isinstance(result, dict):
-            raise RuntimeError("后端链路结束但没有返回有效结果。")
+            raise RuntimeError("Backend chain finished but returned no valid result.")
 
         retry_count = int(result.get("quality_retry_count", 0) or 0)
         if retry_count > 0:
             status.update(
-                label=f"质量闸触发 Self-Correction，已完成重试第 {retry_count} 次。",
+                label=f"Quality gate triggered self-correction, retry #{retry_count} complete.",
                 state="running",
                 expanded=False,
             )
 
         if result.get("needs_direction_choice"):
-            status.update(label="动态方向已提炼，等你选择主攻路线。", state="complete", expanded=False)
+            status.update(label="Dynamic directions ready — pick your attack vector.", state="complete", expanded=False)
         elif result.get("needs_clarification"):
-            status.update(label="需要你补一刀氛围感方向。", state="complete", expanded=False)
+            status.update(label="Need a quick vibe clarification.", state="complete", expanded=False)
         else:
-            status.update(label="🚀 Prompt 已交付，质量雷达正在淡入。", state="complete", expanded=False)
+            status.update(label="Prompt delivered. Quality radar settling.", state="complete", expanded=False)
 
     if not result.get("needs_direction_choice"):
         _safe_clear_streaming_state(thread_id)
@@ -962,8 +981,8 @@ def _resume_pipeline_e2e(selected_option: str) -> Dict[str, Any]:
 
     done_event, holder = _start_resume_worker(selected_option, thread_id, user_input)
 
-    with st.status("正在恢复 checkpoint，继续 v4.0 终审链路...", expanded=False) as status:
-        status.update(label="Claude 正在基于你的选择流式回应... 💬", state="running", expanded=False)
+    with st.status("Resuming from checkpoint, continuing v4.0 finalization chain...", expanded=False) as status:
+        status.update(label="Claude streaming response based on your selection...", state="running", expanded=False)
         streamed = _stream_backend_chit(thread_id, done_event, holder, status)
         st.session_state.last_streamed_chit = streamed
 
@@ -972,16 +991,16 @@ def _resume_pipeline_e2e(selected_option: str) -> Dict[str, Any]:
 
         result = holder.get("result")
         if not isinstance(result, dict):
-            raise RuntimeError("恢复链路结束但没有返回有效结果。")
+            raise RuntimeError("Resume chain finished but returned no valid result.")
 
         retry_count = int(result.get("quality_retry_count", 0) or 0)
         if retry_count > 0:
             status.update(
-                label=f"质量闸触发 Self-Correction，已完成重试第 {retry_count} 次。",
+                label=f"Quality gate triggered self-correction, retry #{retry_count} complete.",
                 state="running",
                 expanded=False,
             )
-        status.update(label="🚀 Prompt 已交付，质量雷达正在淡入。", state="complete", expanded=False)
+        status.update(label="Prompt delivered. Quality radar settling.", state="complete", expanded=False)
 
     _safe_clear_streaming_state(thread_id)
     return result
@@ -995,8 +1014,8 @@ def _resume_direction_e2e(direction_choice_id: str) -> Dict[str, Any]:
 
     done_event, holder = _start_direction_resume_worker(direction_choice_id, thread_id, user_input)
 
-    with st.status("v4.0 第二阶段启动：Claude 正在按选中方向编排 XML Prompt...", expanded=False) as status:
-        status.update(label="Claude 正在吸收你的主攻方向，准备流式碎碎念... 💬", state="running", expanded=False)
+    with st.status("v4.0 stage 2: Claude assembling XML-scoped prompt...", expanded=False) as status:
+        status.update(label="Claude absorbing your attack vector, preparing token stream...", state="running", expanded=False)
         streamed = _stream_backend_chit(thread_id, done_event, holder, status)
         st.session_state.last_streamed_chit = streamed
 
@@ -1005,16 +1024,16 @@ def _resume_direction_e2e(direction_choice_id: str) -> Dict[str, Any]:
 
         result = holder.get("result")
         if not isinstance(result, dict):
-            raise RuntimeError("动态方向终审链路结束但没有返回有效结果。")
+            raise RuntimeError("Dynamic direction finalization chain finished but returned no valid result.")
 
         retry_count = int(result.get("quality_retry_count", 0) or 0)
         if retry_count > 0:
             status.update(
-                label=f"质量闸触发 Self-Correction，已完成重试第 {retry_count} 次。",
+                label=f"Quality gate triggered self-correction, retry #{retry_count} complete.",
                 state="running",
                 expanded=False,
             )
-        status.update(label="🚀 XML Prompt 已交付，质量雷达正在淡入。", state="complete", expanded=False)
+        status.update(label="XML prompt delivered. Quality radar settling.", state="complete", expanded=False)
 
     _safe_clear_streaming_state(thread_id)
     return result
@@ -1051,52 +1070,40 @@ def _build_vibe_descriptions(options: List[str]) -> Dict[str, str]:
     descriptions: Dict[str, str] = {}
     for option in options:
         if option in VIBE_TECH_MAPPING:
-            descriptions[option] = f"我想要「{option}」：{VIBE_TECH_MAPPING[option]['intent']}"
+            descriptions[option] = f"I want «{option}»: {VIBE_TECH_MAPPING[option]['intent']}"
         else:
-            descriptions[option] = f"我想要「{option}」这种感觉"
+            descriptions[option] = f"I want «{option}» — whatever that feels like."
     return descriptions
 
 
 def _format_direction_option(direction: Dict[str, Any]) -> str:
-    title = str(direction.get("title", "未命名方向")).strip()
+    title = str(direction.get("title", "Unnamed direction")).strip()
     focus = str(direction.get("focus", "")).strip()
     if focus:
-        return f"{title}｜{focus[:52]}{'...' if len(focus) > 52 else ''}"
+        return f"{title} ~ {focus[:52]}{'...' if len(focus) > 52 else ''}"
     return title
 
-
 # ============================================================================
-# Rendering
+# Rendering — Mainframe Minimalist
 # ============================================================================
 
 def _render_sidebar() -> None:
-    with st.sidebar:
-        st.markdown("### 今日工位小纸条")
-        st.info(st.session_state.office_quote)
-        st.markdown("### v4.0 动态方向闭环")
-        st.markdown(
-            """
-- 第一阶段：DeepSeek v4-pro 生成动态方向
-- HITL：`st.session_state` 锁住方向快照
-- 第二阶段：选择方向后恢复 checkpoint
-- 收尾：Claude 编排 XML 严格作用域 Prompt
-"""
-        )
+    pass  # deliberately empty — no sidebar in Mainframe
 
 
 def _render_header() -> None:
     st.markdown(
-        """
-<section class="codenest-hero">
-  <div class="stage-kicker">CodeNest Dynamic Prompt Runtime</div>
-  <h1 class="codenest-title">VIBE AGENT CORE<span class="green-dot">.</span></h1>
-  <p class="caption">你负责说“感觉”，DeepSeek 先动态提炼主攻方向；你拍板后，Claude 再把最终 XML Prompt 稳稳编出来。</p>
-</section>
+        f"""
+<div class="mf-navbar">
+  <span class="mf-logo">Mainframe<span class="star">✳︎</span></span>
+  <span style="font-size:10px;font-weight:400;letter-spacing:0.12em;text-transform:uppercase;color:var(--mf-muted);">Prompt engineering runtime</span>
+</div>
+<div class="mf-blur-intro">
+  <p class="mf-blur-line">Hey there, meet A.R.I.A,</p>
+  <p class="mf-blur-line">Mainframe&rsquo;s Adaptive Response Interface Agent</p>
+</div>
+<div id="mf-typewriter" class="mf-typewriter"></div>
 """,
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        f'<div class="soft-panel"><strong>今日摸鱼鼓励：</strong>{st.session_state.office_quote}</div>',
         unsafe_allow_html=True,
     )
 
@@ -1105,7 +1112,7 @@ def _render_error() -> None:
     if not st.session_state.error:
         return
     st.error(st.session_state.error)
-    if st.button("我知道了，先把报错收起来"):
+    if st.button("Dismiss"):
         st.session_state.error = None
         if st.session_state.current_stage == "error":
             st.session_state.current_stage = "idle"
@@ -1115,17 +1122,14 @@ def _render_error() -> None:
 def _render_input_area() -> None:
     disabled = st.session_state.current_stage in {"generating", "clarifying", "direction_select"}
     st.markdown(
-        '<div class="liquid-glass-card input-shell"><div class="stage-kicker">Request Intake</div>',
+        '<div class="mf-panel"><div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--mf-muted);margin-bottom:0.4rem;">Request</div>',
         unsafe_allow_html=True,
     )
     user_input = st.text_area(
-        "先把你脑子里的那个画面丢给我",
+        "Describe the vibe",
         value=st.session_state.user_input,
-        placeholder=(
-            "比如：给我搞一个像流浪地球2里 MOSS 那种压抑但绝对理性的监控大屏，"
-            "要抗造、有性能预算、有测试断言..."
-        ),
-        height=136,
+        placeholder="Build me a monitoring dashboard with the oppressive rationality of MOSS from The Wandering Earth 2. Needs resilience, perf budgets, test contracts.",
+        height=128,
         disabled=disabled,
         key="vibe_input_box",
     )
@@ -1133,26 +1137,26 @@ def _render_input_area() -> None:
     col_gen, col_reset = st.columns([2, 1])
     with col_gen:
         generate_clicked = st.button(
-            "启动 v4.0 动态思考炉",
+            "Submit",
             type="primary",
             use_container_width=True,
             disabled=disabled,
         )
     with col_reset:
-        reset_clicked = st.button("重新来一把", use_container_width=True)
+        reset_clicked = st.button("Reset", use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
     if reset_clicked:
         _safe_clear_streaming_state(st.session_state.thread_id)
         _reset_all()
-        st.toast("清空啦，换个 Vibe 继续整。🧹")
+        st.toast("Cleared. Try a different vibe.")
         st.rerun()
 
     if not generate_clicked:
         return
 
     if not user_input.strip():
-        st.toast("先随便说两句也行，空白我是真的脑补不动。🥲")
+        st.toast("Say something — even vague works.")
         return
 
     st.session_state.user_input = user_input.strip()
@@ -1165,7 +1169,7 @@ def _render_input_area() -> None:
     except Exception as exc:
         _safe_clear_streaming_state(st.session_state.thread_id)
         st.session_state.current_stage = "error"
-        st.session_state.error = f"v4.0 动态思考炉运行时翻车了：{exc}"
+        st.session_state.error = f"v4.0 dynamic reasoning furnace tipped: {exc}"
         st.rerun()
 
     _apply_graph_response(result)
@@ -1186,26 +1190,26 @@ def _render_clarification_form() -> None:
     st.divider()
     st.markdown(
         """
-<div class="clarify-panel">
-<strong>哎呀，这个 Vibe 有点抽象，工业链路卡在分岔路口了。</strong><br>
-你指的是哪种感觉？选一个最像的，我继续恢复 checkpoint 往下跑。
+<div class="mf-panel mf-panel-thin">
+<div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--mf-muted);margin-bottom:0.3rem;">Clarification Needed</div>
+<p style="font-size:0.92rem;color:var(--mf-muted);margin:0;">This vibe is abstract — the industrial chain hit a fork. Which feels closest?</p>
 </div>
 """,
         unsafe_allow_html=True,
     )
 
     if st.session_state.clarification_question:
-        st.caption(f"系统原始问题：{st.session_state.clarification_question}")
+        st.caption(f"System query: {st.session_state.clarification_question}")
 
     with st.form(key="clarify_form", clear_on_submit=False):
         selected_option = st.radio(
-            "你更靠近哪种日常说法？",
+            "Pick a direction",
             options=options,
             format_func=lambda option: descriptions[option],
             key="clarify_radio_locked",
         )
         submitted = st.form_submit_button(
-            "确认我的氛围感",
+            "Confirm",
             type="primary",
             use_container_width=True,
         )
@@ -1219,7 +1223,7 @@ def _render_clarification_form() -> None:
     except Exception as exc:
         _safe_clear_streaming_state(st.session_state.thread_id)
         st.session_state.current_stage = "clarifying"
-        st.session_state.error = f"恢复 checkpoint 时翻车了：{exc}"
+        st.session_state.error = f"Checkpoint resume tipped: {exc}"
         st.rerun()
 
     _apply_graph_response(result)
@@ -1232,16 +1236,16 @@ def _render_dynamic_direction_form() -> None:
 
     directions = list(st.session_state.dynamic_directions or [])
     if not directions:
-        st.warning("DeepSeek 没有留下可选方向快照，我先把链路退回输入态。")
+        st.warning("DeepSeek left no direction snapshots. Returning to input stage.")
         st.session_state.current_stage = "idle"
         return
 
     st.divider()
     st.markdown(
         """
-<div class="direction-panel">
-<strong>DeepSeek 已经把需求拆成了几个动态主攻方向。</strong><br>
-先选一个你最想押注的方向；我会把这个选择锁进 checkpoint，再交给 Claude 编排最终 XML 超级 Prompt。
+<div class="mf-panel mf-panel-thin">
+<div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--mf-muted);margin-bottom:0.3rem;">Dynamic Attack Vectors</div>
+<p style="font-size:0.92rem;color:var(--mf-muted);margin:0;">DeepSeek decomposed your request into these strategic directions. Pick the one to finalize.</p>
 </div>
 """,
         unsafe_allow_html=True,
@@ -1253,16 +1257,16 @@ def _render_dynamic_direction_form() -> None:
         anti_patterns = direction.get("anti_patterns", []) or []
         details = []
         if design_tokens:
-            details.append(f"Design Tokens：{'; '.join(map(str, design_tokens[:2]))}")
+            details.append(f"Tokens: {'; '.join(map(str, design_tokens[:2]))}")
         if budgets:
-            details.append(f"性能预算：{'; '.join(map(str, budgets[:2]))}")
+            details.append(f"Budget: {'; '.join(map(str, budgets[:2]))}")
         if anti_patterns:
-            details.append(f"反模式：{'; '.join(map(str, anti_patterns[:2]))}")
+            details.append(f"Anti: {'; '.join(map(str, anti_patterns[:2]))}")
         details_html = "".join(f"<li>{escape(item)}</li>" for item in details)
         st.markdown(
             f"""
-<div class="direction-card">
-<strong>{escape(str(direction.get("title", "未命名方向")))}</strong><br>
+<div class="mf-direction-card">
+<strong>{escape(str(direction.get("title", "Unnamed")))}</strong>
 {escape(str(direction.get("focus", "")))}
 <ul>{details_html}</ul>
 </div>
@@ -1275,13 +1279,13 @@ def _render_dynamic_direction_form() -> None:
 
     with st.form(key="dynamic_direction_form", clear_on_submit=False):
         selected_id = st.radio(
-            "这次最终 Prompt 主攻哪个方向？",
+            "Main attack vector",
             options=option_ids,
             format_func=lambda option: _format_direction_option(direction_by_id.get(option, {})),
             key="dynamic_direction_radio_locked",
         )
         submitted = st.form_submit_button(
-            "确认进阶生成",
+            "Generate",
             type="primary",
             use_container_width=True,
         )
@@ -1297,7 +1301,7 @@ def _render_dynamic_direction_form() -> None:
     except Exception as exc:
         _safe_clear_streaming_chit_only(st.session_state.thread_id)
         st.session_state.current_stage = "direction_select"
-        st.session_state.error = f"动态方向终审链路翻车了：{exc}"
+        st.session_state.error = f"Dynamic direction chain tipped: {exc}"
         st.rerun()
 
     _apply_graph_response(result)
@@ -1311,20 +1315,21 @@ def _render_quality_panel(snapshot: Dict[str, Any]) -> None:
     score = int(snapshot.get("score", 0) or 0)
     retry_count = int(snapshot.get("retry_count", 0) or 0)
 
-    st.markdown('<div class="quality-panel"><div class="quality-title">🛡️ 3.0 质量雷达</div>', unsafe_allow_html=True)
-    col_score, col_retry, col_source = st.columns(3)
-    col_score.metric("质量得分", f"{score}/100")
-    col_retry.metric("重试次数", retry_count)
-    col_source.metric("审查来源", "后端" if snapshot.get("source") == "backend_quality_gate" else "前端复核")
+    st.markdown('<div style="margin-bottom:0.6rem;">', unsafe_allow_html=True)
+    st.markdown('<div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--mf-muted);margin-bottom:0.4rem;">Quality Radar</div>', unsafe_allow_html=True)
+
+    col_score, col_retry = st.columns(2)
+    col_score.metric("Score", f"{score}/100")
+    col_retry.metric("Retries", retry_count)
 
     badges = [
-        ("性能预算", snapshot.get("perf_budget")),
-        ("边界防御", snapshot.get("edge_cases")),
-        ("可观测性", snapshot.get("observability")),
-        ("测试断言", snapshot.get("test_assertions")),
+        ("Perf Budget", snapshot.get("perf_budget")),
+        ("Edge Defense", snapshot.get("edge_cases")),
+        ("Observability", snapshot.get("observability")),
+        ("Test Assertions", snapshot.get("test_assertions")),
     ]
     badge_html = "".join(
-        f'<span class="quality-badge {"ok" if ok else "warn"}">[{name} {"✓" if ok else "!"}]</span>'
+        f'<span class="mf-chip {"ok" if ok else "warn"}">[{name} {"✓" if ok else "—"}]</span>'
         for name, ok in badges
     )
     st.markdown(badge_html, unsafe_allow_html=True)
@@ -1346,23 +1351,23 @@ def _render_result() -> None:
 
     st.divider()
     st.markdown(
-        '<p class="moment-line">刚才链路大概经历了：后台线程跑图、前台轮询真实 Token、质量雷达淡入、最终 Prompt 锁定。</p>',
+        '<p style="font-size:0.82rem;color:var(--mf-muted);font-family:var(--mf-font-body);">Pipeline: background thread → token poll → quality radar → prompt lock.</p>',
         unsafe_allow_html=True,
     )
 
     if matched:
-        tags_html = " ".join(f'<span class="vibe-chip">{escape(str(v))}</span>' for v in matched)
-        st.markdown(f'<p class="tiny-note">我抓到的味儿大概是：</p>{tags_html}', unsafe_allow_html=True)
+        tags_html = " ".join(f'<span class="mf-chip ok">{escape(str(v))}</span>' for v in matched)
+        st.markdown(f'<p style="font-size:0.76rem;color:var(--mf-muted);margin-bottom:0.3rem;">Detected vibes:</p>{tags_html}', unsafe_allow_html=True)
 
     if inferred_style:
         st.markdown(
-            f'<div class="soft-panel"><strong>我额外脑补了一点：</strong>{escape(str(inferred_style))}</div>',
+            f'<div class="mf-panel mf-panel-thin"><strong style="font-size:0.82rem;">Inferred style:</strong> {escape(str(inferred_style))}</div>',
             unsafe_allow_html=True,
         )
 
     if selected_direction:
         st.markdown(
-            f'<div class="soft-panel"><strong>本次主攻方向：</strong>{escape(str(selected_direction.get("title", "")))}<br>{escape(str(selected_direction.get("focus", "")))}</div>',
+            f'<div class="mf-panel mf-panel-thin"><strong style="font-size:0.82rem;">Attack vector:</strong> {escape(str(selected_direction.get("title", "")))}<br><span style="color:var(--mf-muted);">{escape(str(selected_direction.get("focus", "")))}</span></div>',
             unsafe_allow_html=True,
         )
 
@@ -1371,41 +1376,41 @@ def _render_result() -> None:
         if chit_chat:
             chit_html = "<br>".join(escape(line) for line in str(chit_chat).splitlines() if line.strip())
             st.markdown(
-                f'<div class="chit-chat-panel"><h3>💬 开发者碎碎念</h3><p>{chit_html}</p></div>',
+                f'<div class="mf-panel"><div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--mf-muted);margin-bottom:0.4rem;">Developer Chit-chat</div><p style="font-size:0.88rem;line-height:1.72;color:var(--mf-text);">{chit_html}</p></div>',
                 unsafe_allow_html=True,
             )
     with right:
         _render_quality_panel(st.session_state.quality_snapshot)
 
-    st.markdown('<div class="liquid-glass-card result-shell"><div class="stage-kicker">Claude XML Output</div>', unsafe_allow_html=True)
+    st.markdown('<div class="mf-panel"><div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--mf-muted);margin-bottom:0.4rem;">Cursor Prompt</div>', unsafe_allow_html=True)
     st.subheader("🤖 复制去投喂 Cursor")
-    st.caption("下面这段是建议复制给 Claude Code / Cursor 的工业 Prompt；内容已锁在 session_state 里，点赞、查看状态或 rerun 都不会刷掉。")
+    st.caption("Copy this industrial prompt for Claude Code / Cursor. Locked in session_state — likes and reruns won't clear it.")
     st.code(cursor_prompt, language="markdown", line_numbers=False)
 
     col_copy, col_like, col_refresh, _ = st.columns([1.1, 1.2, 1.4, 3.3])
 
     with col_copy:
-        if st.button("提示我复制", use_container_width=True):
-            st.toast("代码块右上角可以一键复制，我在旁边给你举个灯。✨")
+        if st.button("📋 Copy", use_container_width=True):
+            st.toast("Use the code block copy button (top-right corner).")
 
     with col_like:
         if st.session_state.liked:
-            st.button("已收进样本库", disabled=True, use_container_width=True)
-        elif st.button("这条很能打", type="primary", use_container_width=True):
+            st.button("Saved to sample library", disabled=True, use_container_width=True)
+        elif st.button("This one hits", type="primary", use_container_width=True):
             _save_positive_sample(st.session_state.user_input, prompt)
             st.session_state.liked = True
-            st.toast("收到，这条好样本我已经偷偷记进小本本了。📒")
+            st.toast("Positive sample captured.")
             st.balloons()
             st.rerun()
 
     with col_refresh:
-        if st.button("看看后台状态", use_container_width=True):
+        if st.button("Check backend state", use_container_width=True):
             checkpoint = _call_get_checkpoint_state()
             if checkpoint:
                 _apply_graph_response(checkpoint)
-                st.toast("后台状态还在，没丢。🧾")
+                st.toast("Backend state intact.")
             else:
-                st.toast("暂时没读到 checkpoint，但页面上的 Prompt 还稳稳挂着。")
+                st.toast("No checkpoint found — page prompt is stable.")
             st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
 

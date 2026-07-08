@@ -2,7 +2,7 @@
 Vibe-to-Prompt Agent - Streamlit Frontend v4.0 "Mainframe" Edition
 ==================================================================
 
-Complete Swiss modernist visual refactor — all backend threading,
+Complete CodeNest visual refactor - all backend threading,
 streaming, HITL, and DeepSeek/Claude routing logic preserved intact.
 
 Execution model:
@@ -10,7 +10,7 @@ Execution model:
 2. Start run_pipeline(..., thread_id=thread_id) to let DeepSeek produce dynamic directions.
 3. Lock those directions in session_state for a HITL selection step.
 4. Resume with the selected direction, stream Claude chit-chat, then render the final XML prompt.
-5. ????? backend streaming/reasoning caches only after final delivery.
+5. Clear backend streaming/reasoning caches only after final delivery.
 """
 
 from __future__ import annotations
@@ -35,8 +35,8 @@ from vibe_config import VIBE_TECH_MAPPING
 
 
 st.set_page_config(
-    page_title="Mainframe — Vibe-to-Prompt Agent v4.0",
-    page_icon="✦",
+    page_title="CodeNest - Vibe-to-Prompt Agent v4.0",
+    page_icon="CN",
     layout="centered",
 )
 
@@ -54,7 +54,7 @@ STREAM_GRACE_SECONDS = 0.35
 
 OFFICE_QUOTES: List[str] = [
     "Good design is as little design as possible.",
-    "Less, but better — because it concentrates on the essential.",
+    "Less, but better - because it concentrates on the essential.",
     "A designer knows he has achieved perfection not when there is nothing left to add, but when there is nothing left to take away.",
     "The mainframe is not a machine; it is an attitude.",
     "Form follows function. And function this time is prompt engineering.",
@@ -394,7 +394,7 @@ div[data-testid="stMetric"] label, div[data-testid="stMetric"] div {
 }
 
 .mf-direction-card ul li::before {
-    content: "— ";
+    content: "- ";
 }
 
 /* ---- Chips & Badges ---- */
@@ -589,6 +589,7 @@ section.main > div,
     line-height: 1.42;
 }
 
+.liquid-glass-card,
 .mf-panel,
 .mf-panel-thin,
 .mf-direction-card {
@@ -607,6 +608,7 @@ section.main > div,
         0 28px 90px rgba(0, 0, 0, 0.34);
 }
 
+.liquid-glass-card::before,
 .mf-panel::before,
 .mf-panel-thin::before,
 .mf-direction-card::before,
@@ -833,6 +835,107 @@ div[data-testid="stMarkdownContainer"] * {
     color: #e8fff5 !important;
 }
 
+/* ---- Final CodeNest Legibility Override ---- */
+html body .stApp,
+html body .stApp p,
+html body .stApp span,
+html body .stApp div,
+html body .stApp label,
+html body .stApp small,
+html body .stApp strong,
+html body .stApp li,
+html body .stApp h1,
+html body .stApp h2,
+html body .stApp h3,
+html body .stApp h4,
+html body .stApp [data-testid="stMarkdownContainer"],
+html body .stApp [data-testid="stMarkdownContainer"] * {
+    opacity: 1 !important;
+    filter: none !important;
+    color: #f4fff9 !important;
+    -webkit-text-fill-color: #f4fff9 !important;
+}
+
+html body .stApp .codenest-title,
+html body .stApp .codenest-title * {
+    color: #f7fffb !important;
+    -webkit-text-fill-color: #f7fffb !important;
+}
+
+html body .stApp .codenest-title .green-dot,
+html body .stApp .cn-kicker,
+html body .stApp .codenest-kicker,
+html body .stApp .quality-title {
+    color: #5ed29c !important;
+    -webkit-text-fill-color: #5ed29c !important;
+}
+
+html body .stApp .mf-panel,
+html body .stApp .mf-panel *,
+html body .stApp .mf-panel-thin,
+html body .stApp .mf-panel-thin *,
+html body .stApp .mf-direction-card,
+html body .stApp .mf-direction-card *,
+html body .stApp .liquid-glass-card,
+html body .stApp .liquid-glass-card * {
+    opacity: 1 !important;
+    color: #eafff6 !important;
+    -webkit-text-fill-color: #eafff6 !important;
+}
+
+html body .stApp .mf-panel .cn-kicker,
+html body .stApp .mf-panel-thin .cn-kicker,
+html body .stApp .liquid-glass-card .cn-kicker {
+    color: #5ed29c !important;
+    -webkit-text-fill-color: #5ed29c !important;
+}
+
+html body .stApp .stTextArea label,
+html body .stApp .stTextInput label,
+html body .stApp .stRadio label,
+html body .stApp .stCheckbox label,
+html body .stApp .stSelectbox label,
+html body .stApp [data-testid="stWidgetLabel"],
+html body .stApp [data-testid="stWidgetLabel"] * {
+    color: #e8fff5 !important;
+    -webkit-text-fill-color: #e8fff5 !important;
+    opacity: 1 !important;
+}
+
+html body .stApp textarea,
+html body .stApp input,
+html body .stApp textarea::placeholder,
+html body .stApp input::placeholder {
+    color: #f7fffb !important;
+    -webkit-text-fill-color: #f7fffb !important;
+    opacity: 1 !important;
+}
+
+html body .stApp textarea::placeholder,
+html body .stApp input::placeholder {
+    color: rgba(232, 255, 245, 0.68) !important;
+    -webkit-text-fill-color: rgba(232, 255, 245, 0.68) !important;
+}
+
+html body .stApp .stButton > button,
+html body .stApp .stFormSubmitButton > button,
+html body .stApp .stButton > button *,
+html body .stApp .stFormSubmitButton > button * {
+    color: #06100c !important;
+    -webkit-text-fill-color: #06100c !important;
+    text-shadow: none !important;
+}
+
+html body .stApp .stCodeBlock,
+html body .stApp .stCodeBlock *,
+html body .stApp pre,
+html body .stApp code {
+    color: #e8fff5 !important;
+    -webkit-text-fill-color: #e8fff5 !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+}
+
 @media (max-width: 640px) {
     .block-container {
         padding-top: 1rem !important;
@@ -910,7 +1013,7 @@ INTERACTION_SCRIPT_HTML = """
     target.dataset.mfTyped = 'true';
     target.textContent = '';
 
-    const text = "???????DeepSeek ????????Claude ?? XML Prompt ??????";
+    const text = "Describe the vibe. DeepSeek shapes the directions. Claude forges the XML prompt.";
     const cursor = parentDoc.createElement('span');
     cursor.className = 'mf-cursor';
     target.appendChild(cursor);
@@ -1073,7 +1176,7 @@ def _call_resume_after_clarify(selected_option: str, thread_id: str, user_input:
 def _call_resume_after_direction(direction_choice_id: str, thread_id: str, user_input: str) -> Dict[str, Any]:
     resume_fn = getattr(graph, "resume_after_direction", None)
     if not callable(resume_fn):
-        raise RuntimeError("Backend missing resume_after_direction – cannot proceed to v4.0 dynamic direction finalization.")
+        raise RuntimeError("Backend missing resume_after_direction - cannot proceed to v4.0 dynamic direction finalization.")
     return resume_fn(
         thread_id=thread_id,
         direction_choice_id=direction_choice_id,
@@ -1165,7 +1268,7 @@ def _poll_chit_tokens(
     while True:
         now = time.monotonic()
         if now - start_time > STREAM_TIMEOUT_SECONDS:
-            holder["error"] = TimeoutError("Stream poll timeout – backend chain may be stuck.")
+            holder["error"] = TimeoutError("Stream poll timeout - backend chain may be stuck.")
             done_event.set()
             break
 
@@ -1212,7 +1315,7 @@ def _stream_backend_chit(
     holder: Dict[str, Any],
     status: Any,
 ) -> str:
-    st.markdown('<div class="mf-panel mf-panel-thin"><div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--mf-muted);margin-bottom:0.4rem;">Developer Chit-chat</div>', unsafe_allow_html=True)
+    st.markdown('<div class="liquid-glass-card mf-panel mf-panel-thin"><div class="cn-kicker" style="margin-bottom:0.4rem;">Developer Chit-chat</div>', unsafe_allow_html=True)
     streamed = st.write_stream(_poll_chit_tokens(thread_id, done_event, holder, status))
     st.markdown("</div>", unsafe_allow_html=True)
     return str(streamed or "")
@@ -1370,12 +1473,12 @@ def _run_pipeline_e2e(user_input: str) -> Dict[str, Any]:
     done_event, holder = _start_pipeline_worker(user_input, thread_id)
 
     with st.status("v4.0 stage 1: DeepSeek generating dynamic directions...", expanded=False) as status:
-        status.update(label="DeepSeek v4-pro distilling 2–3 attack vectors...", state="running", expanded=False)
+        status.update(label="DeepSeek v4-pro distilling 2-3 attack vectors...", state="running", expanded=False)
 
         start_time = time.monotonic()
         while not done_event.is_set():
             if time.monotonic() - start_time > STREAM_TIMEOUT_SECONDS:
-                holder["error"] = TimeoutError("Dynamic direction generation timeout – DeepSeek chain may be stuck.")
+                holder["error"] = TimeoutError("Dynamic direction generation timeout - DeepSeek chain may be stuck.")
                 done_event.set()
                 break
             status.update(label="DeepSeek folding your request into selectable tech routes...", state="running", expanded=False)
@@ -1398,7 +1501,7 @@ def _run_pipeline_e2e(user_input: str) -> Dict[str, Any]:
             )
 
         if result.get("needs_direction_choice"):
-            status.update(label="Dynamic directions ready — pick your attack vector.", state="complete", expanded=False)
+            status.update(label="Dynamic directions ready - pick your attack vector.", state="complete", expanded=False)
         elif result.get("needs_clarification"):
             status.update(label="Need a quick vibe clarification.", state="complete", expanded=False)
         else:
@@ -1506,9 +1609,9 @@ def _build_vibe_descriptions(options: List[str]) -> Dict[str, str]:
     descriptions: Dict[str, str] = {}
     for option in options:
         if option in VIBE_TECH_MAPPING:
-            descriptions[option] = f"I want «{option}»: {VIBE_TECH_MAPPING[option]['intent']}"
+            descriptions[option] = f'I want "{option}": {VIBE_TECH_MAPPING[option]["intent"]}'
         else:
-            descriptions[option] = f"I want «{option}» — whatever that feels like."
+            descriptions[option] = f'I want "{option}" - whatever that feels like.'
     return descriptions
 
 
@@ -1520,18 +1623,18 @@ def _format_direction_option(direction: Dict[str, Any]) -> str:
     return title
 
 # ============================================================================
-# Rendering — Mainframe Minimalist
+# Rendering - CodeNest Liquid Glass
 # ============================================================================
 
 def _render_sidebar() -> None:
-    pass  # deliberately empty — no sidebar in Mainframe
+    pass  # deliberately empty - no sidebar in CodeNest
 
 
 def _render_header() -> None:
     st.markdown(
         f"""
 <section class="codenest-hero">
-  <div class="mf-panel cn-floating-card">
+  <div class="liquid-glass-card mf-panel cn-floating-card">
     <div class="status-orbit"></div>
     <strong>CodeNest Core</strong>
     <span>DeepSeek directions locked. Claude XML contract ready for streamed assembly.</span>
@@ -1559,7 +1662,7 @@ def _render_error() -> None:
 def _render_input_area() -> None:
     disabled = st.session_state.current_stage in {"generating", "clarifying", "direction_select"}
     st.markdown(
-        '<div class="mf-panel"><div class="cn-kicker" style="margin-bottom:0.4rem;">Request Intake</div>',
+        '<div class="liquid-glass-card mf-panel"><div class="cn-kicker" style="margin-bottom:0.4rem;">Request Intake</div>',
         unsafe_allow_html=True,
     )
     user_input = st.text_area(
@@ -1574,26 +1677,26 @@ def _render_input_area() -> None:
     col_gen, col_reset = st.columns([2, 1])
     with col_gen:
         generate_clicked = st.button(
-            "?? v4.0 ?????",
+            "Launch v4.0",
             type="primary",
             use_container_width=True,
             disabled=disabled,
         )
     with col_reset:
-        reset_clicked = st.button("?????", use_container_width=True)
+        reset_clicked = st.button("Reset", use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
     if reset_clicked:
         _safe_clear_streaming_state(st.session_state.thread_id)
         _reset_all()
-        st.toast("?????ed. Try a different vibe.")
+        st.toast("Cleared. Try a different vibe.")
         st.rerun()
 
     if not generate_clicked:
         return
 
     if not user_input.strip():
-        st.toast("Say something — even vague works.")
+        st.toast("Say something - even vague works.")
         return
 
     st.session_state.user_input = user_input.strip()
@@ -1627,9 +1730,9 @@ def _render_clarification_form() -> None:
     st.divider()
     st.markdown(
         """
-<div class="mf-panel mf-panel-thin">
+<div class="liquid-glass-card mf-panel mf-panel-thin">
 <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--mf-muted);margin-bottom:0.3rem;">Clarification Needed</div>
-<p style="font-size:0.92rem;color:var(--mf-muted);margin:0;">This vibe is abstract — the industrial chain hit a fork. Which feels closest?</p>
+<p style="font-size:0.92rem;color:var(--mf-muted);margin:0;">This vibe is abstract - the industrial chain hit a fork. Which feels closest?</p>
 </div>
 """,
         unsafe_allow_html=True,
@@ -1680,7 +1783,7 @@ def _render_dynamic_direction_form() -> None:
     st.divider()
     st.markdown(
         """
-<div class="mf-panel mf-panel-thin">
+<div class="liquid-glass-card mf-panel mf-panel-thin">
 <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--mf-muted);margin-bottom:0.3rem;">Dynamic Attack Vectors</div>
 <p style="font-size:0.92rem;color:var(--mf-muted);margin:0;">DeepSeek decomposed your request into these strategic directions. Pick the one to finalize.</p>
 </div>
@@ -1702,7 +1805,7 @@ def _render_dynamic_direction_form() -> None:
         details_html = "".join(f"<li>{escape(item)}</li>" for item in details)
         st.markdown(
             f"""
-<div class="mf-direction-card">
+<div class="liquid-glass-card mf-direction-card">
 <strong>{escape(str(direction.get("title", "Unnamed")))}</strong>
 {escape(str(direction.get("focus", "")))}
 <ul>{details_html}</ul>
@@ -1770,7 +1873,7 @@ def _render_quality_panel(snapshot: Dict[str, Any]) -> None:
         ("Test Assertions", snapshot.get("test_assertions")),
     ]
     badge_html = "".join(
-        f'<span class="mf-chip {"ok" if ok else "warn"}">[{name} {"✓" if ok else "—"}]</span>'
+        f'<span class="mf-chip {"ok" if ok else "warn"}">[{name} {"OK" if ok else "WAIT"}]</span>'
         for name, ok in badges
     )
     st.markdown(badge_html, unsafe_allow_html=True)
@@ -1867,7 +1970,7 @@ def _render_result() -> None:
 
     st.divider()
     st.markdown(
-        '<p style="font-size:0.82rem;color:var(--mf-muted);font-family:var(--mf-font-body);">Pipeline: background thread → token poll → quality radar → prompt lock.</p>',
+        '<p style="font-size:0.82rem;color:var(--mf-muted);font-family:var(--mf-font-body);">Pipeline: background thread > token poll > quality radar > prompt lock.</p>',
         unsafe_allow_html=True,
     )
 
@@ -1877,13 +1980,13 @@ def _render_result() -> None:
 
     if inferred_style:
         st.markdown(
-            f'<div class="mf-panel mf-panel-thin"><strong style="font-size:0.82rem;">Inferred style:</strong> {escape(str(inferred_style))}</div>',
+            f'<div class="liquid-glass-card mf-panel mf-panel-thin"><strong style="font-size:0.82rem;">Inferred style:</strong> {escape(str(inferred_style))}</div>',
             unsafe_allow_html=True,
         )
 
     if selected_direction:
         st.markdown(
-            f'<div class="mf-panel mf-panel-thin"><strong style="font-size:0.82rem;">Attack vector:</strong> {escape(str(selected_direction.get("title", "")))}<br><span style="color:var(--mf-muted);">{escape(str(selected_direction.get("focus", "")))}</span></div>',
+            f'<div class="liquid-glass-card mf-panel mf-panel-thin"><strong style="font-size:0.82rem;">Attack vector:</strong> {escape(str(selected_direction.get("title", "")))}<br><span>{escape(str(selected_direction.get("focus", "")))}</span></div>',
             unsafe_allow_html=True,
         )
 
@@ -1892,15 +1995,15 @@ def _render_result() -> None:
         if chit_chat:
             chit_html = "<br>".join(escape(line) for line in str(chit_chat).splitlines() if line.strip())
             st.markdown(
-                f'<div class="mf-panel"><div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--mf-muted);margin-bottom:0.4rem;">Developer Chit-chat</div><p style="font-size:0.88rem;line-height:1.72;color:var(--mf-text);">{chit_html}</p></div>',
+                f'<div class="liquid-glass-card mf-panel"><div class="cn-kicker" style="margin-bottom:0.4rem;">Developer Chit-chat</div><p style="font-size:0.88rem;line-height:1.72;">{chit_html}</p></div>',
                 unsafe_allow_html=True,
             )
     with right:
         _render_quality_panel(st.session_state.quality_snapshot)
 
-    st.markdown('<div class="mf-panel"><div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--mf-muted);margin-bottom:0.4rem;">Cursor Prompt</div>', unsafe_allow_html=True)
-    st.subheader("🤖 复制去投喂 Cursor")
-    st.caption("Copy this industrial prompt for Claude Code / Cursor. Locked in session_state — likes and reruns won't clear it.")
+    st.markdown('<div class="liquid-glass-card mf-panel"><div class="cn-kicker" style="margin-bottom:0.4rem;">Cursor Prompt</div>', unsafe_allow_html=True)
+    st.subheader("Cursor XML Prompt")
+    st.caption("Copy this industrial prompt for Claude Code / Cursor. Locked in session_state - likes and reruns will not clear it.")
     st.code(cursor_prompt, language="markdown", line_numbers=False)
 
     col_copy, col_like, col_refresh, _ = st.columns([1.1, 1.2, 1.4, 3.3])
@@ -1925,7 +2028,7 @@ def _render_result() -> None:
                 _apply_graph_response(checkpoint)
                 st.toast("Backend state intact.")
             else:
-                st.toast("No checkpoint found — page prompt is stable.")
+                st.toast("No checkpoint found - page prompt is stable.")
             st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
 
